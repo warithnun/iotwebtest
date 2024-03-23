@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 
 const dbConnection = new Pool({
     user: 'webadmin', 
-    host: 'node60669-iotpj.th1.proen.cloud',
+    host: '10.104.10.202',
     database: 'postgres',
     password: 'TZOkpx87811',
     port: 5432
