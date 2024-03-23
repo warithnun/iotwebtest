@@ -32,7 +32,7 @@ app.post('/addData', (req, res) => {
   connection.query(INSERT_DATA_QUERY, [name, email, id], (error, results) => {
     if (error) {
       console.error('เกิดข้อผิดพลาดในการเพิ่มข้อมูล:', error);
-      return res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มข้อมูล');
+      return res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มข้อมูล',error);
     }
     console.log('ข้อมูลถูกเพิ่มเข้าฐานข้อมูลเรียบร้อยแล้ว');
     res.redirect('/');
