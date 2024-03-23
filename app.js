@@ -12,271 +12,36 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // APPLY COOKIE SESSION MIDDLEWARE
-app.use(cookieSession({
-    name: 'session',
-    keys: ['key1', 'key2'],
-    maxAge: 3600 * 1000 // 1hr
-}));
-
-// DECLARING CUSTOM MIDDLEWARE
-const ifNotLoggedin = (req, res, next) => {
-    if (!req.session.isLoggedIn) {
-        return res.render('login');
+app.post('/register', [
+    body('user_name').notEmpty().trim().escape(),
+    body('user_email').isEmail().normalizeEmail(),
+    body('user_pass').notEmpty()
+], async (req, res) => {
+    // ตรวจสอบ errors จาก express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
     }
-    next();
-};
-const ifLoggedin = (req, res, next) => {
-    if (req.session.isLoggedIn) {
-        return res.redirect('/user');
-    }
-    next();
-};
-// END OF CUSTOM MIDDLEWARE
 
-// ROOT PAGE
-app.get('/', ifNotLoggedin, (req, res, next) => {
-    dbConnection.query("SELECT name FROM users WHERE id=$1", [req.session.userID], (err, result) => {
-        if (err) {
-            return next(err);
-        }
-        res.render('user', {
-            name: result.rows[0].name,
-        });
-    });
-});
+    const { user_name, user_email, user_pass } = req.body;
 
-// REGISTER PAGE
-app.get('/register', ifLoggedin, (req, res) => {
-    res.render('register', {
-        register_error: [],
-        old_data: {},
-    });
-});
-
-
-// LOGIN PAGE
-app.get('/login', ifLoggedin, (req, res) => {
-   
-    if(req.query.register === 'success'){
-        const registerSuccess = req.query.register === 'success';
-        res.render('login', {
-            login_errors: [],
-            register_success: registerSuccess,
-    
-    
-        });
-    }else{
-        res.render('login', {
-            login_errors: [],
-    
-        });
-    }
-        
-       
-});
-
-app.post('/login', ifLoggedin, [
-    body('user_email').custom((value) => {
-        return dbConnection.query('SELECT email FROM users WHERE email=$1', [value])
-            .then((result) => {
-                if (result.rows.length === 1) {
-                    return true;
-                }
-                return Promise.reject('Invalid Email Address!');
-            });
-    }),
-    body('user_pass', 'Password is empty!').trim().not().isEmpty(),
-], (req, res) => {
-    const validation_result = validationResult(req);
-    const { user_pass, user_email } = req.body;
-    if (validation_result.isEmpty()) {
-        dbConnection.query("SELECT * FROM users WHERE email=$1", [user_email])
-            .then((result) => {
-                bcrypt.compare(user_pass, result.rows[0].password).then((compare_result) => {
-                    if (compare_result === true) {
-                        req.session.isLoggedIn = true;
-                        req.session.userID = result.rows[0].id;
-                        res.redirect('/user');
-                    } else {
-                        res.render('login', {
-                            login_errors: ['Invalid Password!'],
-                        });
-                    }
-                })
-                    .catch((err) => {
-                        if (err) throw err;
-                    });
-            })
-            .catch((err) => {
-                if (err) throw err;
-            });
-    } else {
-        let allErrors = validation_result.errors.map((error) => {
-            return error.msg;
-        });
-        res.render('login', {
-            login_errors: allErrors,
-        });
-    }
-});
-
-// REGISTER PAGE
-app.get('/register', ifLoggedin, (req, res) => {
-    res.render('register', {
-        register_error: [],
-        old_data: {},
-    });
-});
-
-app.post('/register', ifLoggedin, [
-    body('user_email', 'Invalid email address!').isEmail().custom((value) => {
-        return dbConnection.query('SELECT email FROM users WHERE email=$1', [value])
-            .then((result) => {
-                if (result.rows.length > 0) {
-                    return Promise.reject('This E-mail already in use!');
-                }
-                return true;
-            });
-    }),
-    body('user_name', 'Username is Empty!').trim().not().isEmpty(),
-    body('user_pass', 'The password must be of minimum length 6 characters').trim().isLength({ min: 6 }),
-], (req, res, next) => {
-    const validation_result = validationResult(req);
-    const { user_name, user_pass, user_email } = req.body;
-    if (validation_result.isEmpty()) {
-        bcrypt.hash(user_pass, 12).then((hash_pass) => {
-            dbConnection.query("INSERT INTO users(name, email, password) VALUES($1, $2, $3)", [user_name, user_email, hash_pass])
-                .then(() => {
-                    
-                    res.redirect('/login?register=success');
-                    
-                })
-                .catch((err) => {
-                    if (err) throw err;
-                });
-        })
-            .catch((err) => {
-                if (err) throw err;
-            });
-    } else {
-        let allErrors = validation_result.errors.map((error) => {
-            return error.msg;
-        });
-        res.render('register', {
-            register_error: allErrors,
-            old_data: req.body,
-        });
-    }
-});
-app.post('/addboard', async (req, res) => {
     try {
-        const { boardname, message, tokenboard, user_email } = req.body;
+        // สร้าง hash ของรหัสผ่าน
+        const hashedPassword = await bcrypt.hash(user_pass, 10);
+
         // เพิ่มข้อมูลลงในฐานข้อมูล
-        const client = await dbConnection.connect();
-        const result = await client.query(
-            'INSERT INTO board (email, token, boardname, message, temperature, humidity, soilmoisture, phvalue) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-            [user_email, tokenboard, boardname, message, null, null, null, null]
-        );
-        client.release();
-        // แจ้งเตือนผู้ใช้ว่าเพิ่มบอร์ดสำเร็จ
-        res.send("<script>alert('เพิ่มบอร์ดแล้ว'); window.location.href = '/user';</script>");
-    } catch (err) {
-        console.error(err);
-        // กรณีเกิดข้อผิดพลาด
-        res.send('เกิดข้อผิดพลาดในการเพิ่มบอร์ด');
-    }
-});
-
-// USER PAGE
-app.get('/user', ifNotLoggedin, (req, res) => {
-    dbConnection.query("SELECT * FROM users WHERE id=$1", [req.session.userID], (err, result) => {
-        if (err) {
-            return res.status(500).send('Internal Server Error');
-        }
-
-        // นำข้อมูลชื่อผู้ใช้จากฐานข้อมูล
-        const username = result.rows[0].email || 'Guest';
-        // ส่งข้อมูลไปที่มุมมอง (view) เพื่อแสดงบนหน้าเว็บ
-        res.render('user', { username });
-    });
-});
-
-
-app.get('/getboards/:username', async (req, res) => {
-    try {
-        const username = req.params.username;
-
-        // Query ข้อมูลจากฐานข้อมูลโดยใช้ username เป็นเงื่อนไข
-        const result = await dbConnection.query('SELECT * FROM board WHERE email = $1', [username]);
-
-        // ส่งข้อมูลที่ได้กลับเป็น JSON ให้กับไคลเอ็นต์
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        // กรณีเกิดข้อผิดพลาด
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.get('/board',ifNotLoggedin, function(req, res) {
-    const nemeValue = req.query.neme;
-    res.render('board', { nemeValue: nemeValue });
-});
-
-app.get('/DatasensorStream', async (req, res) => {
-    const neme = req.query.neme;
-    try {
-        const query = `SELECT * FROM board WHERE token = '${neme}' ORDER BY id DESC LIMIT 1`;
-        const { rows } = await dbConnection.query(query);
-
-        if (rows.length > 0) {
-            res.writeHead(200, {
-                'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive'
-            });
-
-            const sendSensorData = (data) => {
-                res.write(`data: ${JSON.stringify(data)}\n\n`);
-            };
-
-            const watcher = () => {
-                const query = `SELECT * FROM board WHERE token = '${neme}' ORDER BY id DESC LIMIT 1`;
-                dbConnection.query(query)
-                    .then(result => {
-                        if (result.rows.length > 0) {
-                            const sensorData = {
-                                temperature: result.rows[0].temperature,
-                                humidity: result.rows[0].humidity,
-                                pHValue: result.rows[0].phvalue,
-                                soilMoisture: result.rows[0].soilmoisture,
-                                boardname: result.rows[0].boardname
-                            };
-                            sendSensorData(sensorData);
-                        }
-                    })
-                    .catch(error => console.error('Error watching sensor data:', error));
-            };
-
-            setInterval(watcher, 1000);
-        } else {
-            res.status(404).end();
-        }
+        dbConnection.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [user_name, user_email, hashedPassword], (error, results, fields) => {
+            if (error) {
+                console.error('Error inserting data to database: ' + error.stack);
+                return res.status(500).send('Internal Server Error');
+            }
+            console.log('Inserted ' + results.affectedRows + ' row(s)');
+            res.redirect('/login'); // เมื่อเสร็จสามารถเปลี่ยนเส้นทางไปยังหน้า login หรือหน้าอื่น ๆ ตามที่ต้องการ
+        });
     } catch (error) {
-        console.error('Error fetching sensor data:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error inserting data to database: ' + error.stack);
+        res.status(500).send('Internal Server Error');
     }
-});
-
-
-
-app.post('/update-data', (req, res) => {
-    const { temperature, humidity, soilMoisture, pHValue, token } = req.body;
-
-    
-    dbConnection.query('UPDATE board SET temperature = $1, humidity = $2, soilmoisture = $3, phvalue = $4 WHERE token = $5', 
-        [temperature, humidity, soilMoisture, pHValue, token]);
-
 });
 
 
