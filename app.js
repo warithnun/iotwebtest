@@ -1,4 +1,3 @@
-
 const express = require('express');
 const mysql = require('mysql');
 const ejs = require('ejs')
@@ -15,9 +14,10 @@ var con = mysql.createConnection({
 });
 
 app.get('/', function(req, res) {
-     con.query("SELECT * FROM users", function(err, result) {
+    const sql = "SELECT * FROM users"
+    con.query(sql, function(err, result) {
         if (err) throw err;
-         res.render('index', { users: result });
+        res.render('index', { users: result });
     });
 });
 /* app.post('/add', function(req, res) {
