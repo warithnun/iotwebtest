@@ -39,7 +39,6 @@ app.post('/addData', (req, res) => {
   });
 });
 
-const port = 3000;
-app.listen(port, () => {
-  console.log(`เซิร์ฟเวอร์กำลังรันที่ http://localhost:${port}`);
+app.listen(3001, () => {
+    console.log('Server is running on port 3001');
 });
