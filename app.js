@@ -1,44 +1,38 @@
+// app.js
+
 const express = require('express');
-const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const app = express();
 
-app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({ extended: false }));
-
 const connection = mysql.createConnection({
-    host: 'node60691-env-7996996.th1.proen.cloud',
-    user: 'root', // แทนที่ด้วยชื่อผู้ใช้ MySQL
-    password: 'password', // แทนที่ด้วยรหัสผ่าน MySQL
-    database: 'test' // แทนที่ด้วยชื่อฐานข้อมูลที่ต้องการเชื่อมต่อ
-  });
+  host: 'localhost',
+  user: 'your_mysql_username',
+  password: 'your_mysql_password',
+  database: 'your_database_name'
+});
 
 connection.connect((err) => {
   if (err) {
-    console.error('เกิดข้อผิดพลาดในการเชื่อมต่อกับฐานข้อมูล:', err);
+    console.error('Error connecting to database: ' + err.stack);
     return;
   }
-  console.log('เชื่อมต่อกับฐานข้อมูล MySQL สำเร็จ');
+  console.log('Connected to database as id ' + connection.threadId);
 });
+
+app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
-  res.render('index');
-});
-
-app.post('/addData', (req, res) => {
-  const { name, email, id } = req.body;
-  const INSERT_DATA_QUERY = `INSERT INTO users (name, email, id) VALUES (?, ?, ?)`;
-
-  connection.query(INSERT_DATA_QUERY, [name, email, id], (error, results) => {
+  // Query เพื่อดึงข้อมูลจากฐานข้อมูล
+  connection.query('SELECT * FROM your_table_name', (error, results) => {
     if (error) {
-      console.error('เกิดข้อผิดพลาดในการเพิ่มข้อมูล:', error);
-      return res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มข้อมูล',error);
+      console.error('Error querying database: ' + error.stack);
+      return;
     }
-    console.log('ข้อมูลถูกเพิ่มเข้าฐานข้อมูลเรียบร้อยแล้ว');
-    res.redirect('/');
+    // ส่งข้อมูลที่ดึงมาไปแสดงในหน้า index ด้วย EJS
+    res.render('index', { data: results });
   });
 });
 
-app.listen(3001, () => {
-    console.log('Server is running on port 3001');
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
 });
