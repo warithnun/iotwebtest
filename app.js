@@ -12,6 +12,14 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // APPLY COOKIE SESSION MIDDLEWARE
+
+// เพิ่มการเรียกใช้งาน cookie-session middleware
+app.use(cookieSession({
+    name: 'session',
+    keys: ['key1', 'key2']
+}));
+
+// สร้างเส้นทางสำหรับการรับค่า POST จากฟอร์มลงทะเบียน
 app.post('/register', (req, res) => {
     // รับข้อมูลจากฟอร์ม
     const { user_name, user_email, user_pass } = req.body;
@@ -35,14 +43,15 @@ app.post('/register', (req, res) => {
 
 });
 
-
-
-
-
-
-app.use((req, res) => {
-    res.redirect('/register');
-
+// เพิ่มเส้นทางสำหรับการแสดงฟอร์มลงทะเบียน
+app.get('/register', (req, res) => {
+    res.render('register');
 });
 
+// เพิ่มเส้นทางสำหรับการเรียกใช้งานหน้าลงทะเบียนหากไม่พบเส้นทางที่ตรงกับที่ร้องขอ
+app.use((req, res) => {
+    res.redirect('/register');
+});
+
+// เริ่มต้นเซิร์ฟเวอร์
 app.listen(3000, () => console.log('Server is Running...'));
