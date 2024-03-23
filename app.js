@@ -12,50 +12,37 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // APPLY COOKIE SESSION MIDDLEWARE
-app.post('/register', [
-    body('user_name').notEmpty().trim().escape(),
-    body('user_email').isEmail().normalizeEmail(),
-    body('user_pass').notEmpty()
-], async (req, res) => {
-    // ตรวจสอบ errors จาก express-validator
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
+app.post('/register', (req, res) => {
+    // รับข้อมูลจากฟอร์ม
     const { user_name, user_email, user_pass } = req.body;
 
-    try {
-        // สร้าง hash ของรหัสผ่าน
-        const hashedPassword = await bcrypt.hash(user_pass, 10);
-
-        // เพิ่มข้อมูลลงในฐานข้อมูล
-        dbConnection.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [user_name, user_email, hashedPassword], (error, results, fields) => {
-            if (error) {
-                console.error('Error inserting data to database: ' + error.stack);
-                return res.status(500).send('Internal Server Error');
-            }
-            console.log('Inserted ' + results.affectedRows + ' row(s)');
-            res.redirect('/login'); // เมื่อเสร็จสามารถเปลี่ยนเส้นทางไปยังหน้า login หรือหน้าอื่น ๆ ตามที่ต้องการ
-        });
-    } catch (error) {
-        console.error('Error inserting data to database: ' + error.stack);
-        res.status(500).send('Internal Server Error');
+    // ตรวจสอบความถูกต้องของข้อมูล
+    if (!user_name || !user_email || !user_pass) {
+        // กรณีข้อมูลไม่ครบถ้วน
+        return res.status(400).send("กรุณากรอกข้อมูลให้ครบทุกช่อง");
     }
+
+    // นำข้อมูลที่ได้รับมาเขียนลงในฐานข้อมูล
+    const sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
+    dbConnection.query(sql, [user_name, user_email, user_pass], (err, result) => {
+        if (err) {
+            console.error("เกิดข้อผิดพลาดในการเพิ่มข้อมูล:", err);
+            return res.status(500).send("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        }
+        console.log("บันทึกข้อมูลเรียบร้อย:", result);
+        res.send("การลงทะเบียนเสร็จสมบูรณ์");
+    });
+
 });
 
 
 
-// LOGOUT
-app.get('/logout', (req, res) => {
-    req.session = null;
-    res.redirect('/login');
-});
 
-// 404 Page Not Found
+
+
 app.use((req, res) => {
-    res.redirect('/login');
-   /*  res.status(404).send('<h1>404 Page Not Found!</h1>'); */
+    res.redirect('/register');
+
 });
 
 app.listen(3000, () => console.log('Server is Running...'));
