@@ -1,51 +1,39 @@
-const express = require('express');
-const path = require('path');
-const cookieSession = require('cookie-session');
-const bcrypt = require('bcrypt');
-const { body, validationResult } = require('express-validator');
-const dbConnection = require('./database');
-const app = express();
-app.use(express.urlencoded({ extended: false }));
+// เรียกใช้งาน MySQL module
+const mysql = require('mysql');
 
-// SET OUR VIEWS AND VIEW ENGINE
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-
-// สร้างเส้นทางสำหรับการแสดงฟอร์มลงทะเบียน
-app.get('/register', (req, res) => {
-    res.render('register');
+// กำหนดค่าการเชื่อมต่อกับฐานข้อมูล MySQL
+const connection = mysql.createConnection({
+    host: 'node60688-iotweb.th1.proen.cloud',
+    user: 'root',
+    password: 'HDKkbe38334',
+    database: 'test'
 });
 
-
-// เพิ่มเส้นทางสำหรับการเรียกใช้งานหน้าลงทะเบียนหากไม่พบเส้นทางที่ตรงกับที่ร้องขอ
-app.use((req, res) => {
-    res.redirect('/register');
+// เชื่อมต่อกับฐานข้อมูล
+connection.connect((err) => {
+  if (err) {
+    console.error('เกิดข้อผิดพลาดในการเชื่อมต่อกับ MySQL:', err);
+    throw err;
+  }
+  console.log('เชื่อมต่อกับ MySQL สำเร็จ');
 });
 
-// สร้างเส้นทางสำหรับการรับค่า POST จากฟอร์มลงทะเบียน
-app.post('/register', (req, res) => {
-    // รับข้อมูลจากฟอร์ม
-    const { user_name, user_email, user_pass } = req.body;
+// ฟังก์ชันสำหรับเพิ่มข้อมูลลงในฐานข้อมูล
+function insertData(data) {
+  const sql = 'INSERT INTO table_name (column1, column2, column3) VALUES (?, ?, ?)';
+  const values = [data.value1, data.value2, data.value3];
 
-    // ตรวจสอบความถูกต้องของข้อมูล
-    if (!user_name || !user_email || !user_pass) {
-        // กรณีข้อมูลไม่ครบถ้วน
-        return res.status(400).send("กรุณากรอกข้อมูลให้ครบทุกช่อง");
+  connection.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการเพิ่มข้อมูล:', err);
+      throw err;
     }
+    console.log('ข้อมูลถูกเพิ่มเข้าสู่ฐานข้อมูลแล้ว');
+  });
+}
 
-    // นำข้อมูลที่ได้รับมาเขียนลงในฐานข้อมูล
-    const sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
-    dbConnection.query(sql, [user_name, user_email, user_pass], (err, result) => {
-        if (err) {
-            console.error("เกิดข้อผิดพลาดในการเพิ่มข้อมูล:", err);
-            return res.status(500).send("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-        }
-        console.log("บันทึกข้อมูลเรียบร้อย:", result);
-        res.send("การลงทะเบียนเสร็จสมบูรณ์");
-    });
+// เรียกใช้งานฟังก์ชันเพื่อเพิ่มข้อมูล
+insertData({ value1: 'ค่า1', value2: 'ค่า2', value3: 'ค่า3' });
 
-});
-
-
-// เริ่มต้นเซิร์ฟเวอร์
-app.listen(3000, () => console.log('Server is Running...'));
+// ปิดการเชื่อมต่อกับฐานข้อมูล MySQL เมื่อไม่ได้ใช้งาน
+// connection.end();
