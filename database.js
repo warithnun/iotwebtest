@@ -1,10 +1,10 @@
 const { Pool } = require('pg');
 
 const dbConnection = new Pool({
-    user: 'postgres',   // Correct PostgreSQL username
-    host: 'localhost',
-    database: 'web1',
-    password: '0000',
+    user: 'webadmin', 
+    host: 'node60669-iotpj.th1.proen.cloud',
+    database: 'postgres',
+    password: 'TZOkpx87811',
     port: 5432
 });
 
