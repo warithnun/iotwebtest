@@ -1,9 +1,12 @@
-var express = require('express');
-var mysql = require('mysql');
-var ejs = require('ejs');
-var bodyParser = require('body-parser');
 
-var app = express();
+const express = require('express');
+const mysql = require('mysql');
+const ejs = require('ejs')
+const app = express();
+const port = 11512;
+
+app.set('view engine', 'ejs');
+
 
 var con = mysql.createConnection({
     host: "node60691-env-7996996.th1.proen.cloud",
@@ -12,16 +15,13 @@ var con = mysql.createConnection({
     database: "test"
 });
 
-app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({ extended: true }));
-
 app.get('/', function(req, res) {
-    con.query("SELECT * FROM users", function(err, result, fields) {
-        if (err) throw err;
-        res.render('index', { users: result });
-    });
+   
+        con.query("SELECT * FROM users", function(err, result) {
+            if (err) throw err;
+            res.render('index', { users: result });
+        });
 });
-
 app.post('/', function(req, res) {
     var name = req.body.name;
     var email = req.body.email;
@@ -33,6 +33,6 @@ app.post('/', function(req, res) {
     });
 });
 
-var server = app.listen(11512, function() {
-    console.log('Server is running on port 11512');
-});
+
+
+app.listen(port, () => console.log(`Server is running on port ${port}`));
