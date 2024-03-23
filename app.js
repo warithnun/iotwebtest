@@ -26,10 +26,10 @@ app.get('/', (req, res) => {
 });
 
 app.post('/addData', (req, res) => {
-  const { name, email, age } = req.body;
-  const INSERT_DATA_QUERY = `INSERT INTO users (name, email, age) VALUES (?, ?, ?)`;
+  const { name, email, id } = req.body;
+  const INSERT_DATA_QUERY = `INSERT INTO users (name, email, id) VALUES (?, ?, ?)`;
 
-  connection.query(INSERT_DATA_QUERY, [name, email, age], (error, results) => {
+  connection.query(INSERT_DATA_QUERY, [name, email, id], (error, results) => {
     if (error) {
       console.error('เกิดข้อผิดพลาดในการเพิ่มข้อมูล:', error);
       return res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มข้อมูล');
