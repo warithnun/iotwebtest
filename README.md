@@ -1,2 +1,0 @@
-# nodejs-registration
-nodejs registration

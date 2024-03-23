@@ -1,24 +1,30 @@
 {
-  "name": "nodejs_login",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-session": "^2.1.0",
+    "ejs": "^3.1.9",
+    "express": "^4.19.1",
+    "express-validator": "^7.0.1",
+    "mysql2": "^3.9.2",
+    "nodemon": "^3.1.0",
+    "pg": "^8.11.3"
+  },
+  "name": "iotwebtest",
   "version": "1.0.0",
-  "description": "",
-  "main": "sv.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon sv"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Thanit1/iotwebtest.git"
+  },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "bcrypt": "^5.0.0",
-    "cookie-session": "^1.4.0",
-    "ejs": "^3.1.5",
-    "express": "^4.17.1",
-    "express-validator": "^6.7.0",
-    "mysql2": "^2.2.5",
-    "pg": "^8.11.3"
+  "bugs": {
+    "url": "https://github.com/Thanit1/iotwebtest/issues"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  }
+  "homepage": "https://github.com/Thanit1/iotwebtest#readme",
+  "description": ""
 }
