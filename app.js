@@ -20,7 +20,7 @@ app.get('/', function(req, res) {
          res.render('index', { users: result });
     });
 });
-app.post('/', function(req, res) {
+/* app.post('/add', function(req, res) {
     var name = req.body.name;
     var email = req.body.email;
     
@@ -29,7 +29,7 @@ app.post('/', function(req, res) {
         console.log("1 record inserted");
         res.redirect('/'); 
     });
-});
+}); */
 
 
 app.listen(port, () => console.log(`Server is running on port ${port}`));
