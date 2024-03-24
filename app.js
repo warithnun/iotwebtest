@@ -125,49 +125,49 @@ app.get('/register', ifLoggedin, (req, res) => {
 });
 
 app.post('/register', ifLoggedin, [
-    body('user_email', 'Invalid email address!').isEmail().custom((value, { req }) => {
-        return new Promise((resolve, reject) => {
-            dbPool.query('SELECT email FROM users WHERE email = ?', [value], (error, [rows]) => {
-                if (error) {
-                    reject(error);
-                }
-                if (rows.length > 0) {
-                    reject('This E-mail already in use!');
-                } else {
-                    resolve(true);
-                }
+    body('user_email', 'Invalid email address!')
+        .isEmail()
+        .custom((value, { req }) => {
+            return new Promise((resolve, reject) => {
+                dbPool.query('SELECT email FROM users WHERE email = ?', [value], (error, [rows]) => {
+                    if (error) {
+                        reject(error);
+                    }
+                    if (rows.length > 0) {
+                        reject('This E-mail already in use!');
+                    } else {
+                        resolve(true);
+                    }
+                });
             });
-        });
-    }),
+        }),
     body('user_name', 'Username is Empty!').trim().not().isEmpty(),
     body('user_pass', 'The password must be of minimum length 6 characters').trim().isLength({ min: 6 }),
-], (req, res, next) => {
-    const validation_result = validationResult(req);
-    const { user_name, user_pass, user_email } = req.body;
-    if (validation_result.isEmpty()) {
-        bcrypt.hash(user_pass, 12).then((hash_pass) => {
-            dbPool.query("INSERT INTO users(name, email, password) VALUES(?, ?, ?)", [user_name, user_email, hash_pass], (error) => {
-                if (error) {
-                    console.error('Error inserting user:', error);
-                    return res.status(500).send('Internal Server Error');
-                }
-                res.redirect('/login?register=success');
+], async (req, res) => {
+    try {
+        const validation_result = validationResult(req);
+        const { user_name, user_pass, user_email } = req.body;
+
+        if (!validation_result.isEmpty()) {
+            let allErrors = validation_result.errors.map((error) => {
+                return error.msg;
             });
-        })
-        .catch((err) => {
-            console.error('Error hashing password:', err);
-            return res.status(500).send('Internal Server Error');
-        });
-    } else {
-        let allErrors = validation_result.errors.map((error) => {
-            return error.msg;
-        });
-        res.render('register', {
-            register_error: allErrors,
-            old_data: req.body,
-        });
+            return res.render('register', {
+                register_error: allErrors,
+                old_data: req.body,
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(user_pass, 12);
+        await dbPool.query("INSERT INTO users(name, email, password) VALUES(?, ?, ?)", [user_name, user_email, hashedPassword]);
+        
+        res.redirect('/login?register=success');
+    } catch (error) {
+        console.error('Error during user registration:', error);
+        res.status(500).send('Internal Server Error');
     }
 });
+
 
 
 app.post('/addboard', async (req, res) => {
