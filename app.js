@@ -130,9 +130,9 @@ app.get('/register', ifLoggedin, (req, res) => {
 
 app.post('/register', ifLoggedin, [
     body('user_email', 'Invalid email address!').isEmail().custom((value) => {
-        return dbConnection.query('SELECT email FROM users WHERE email=$1', [value])
+        return dbConnection.query('SELECT email FROM users WHERE email = ?', [value])
             .then((result) => {
-                if (result.rows.length > 0) {
+                if (result.length > 0) {
                     return Promise.reject('This E-mail already in use!');
                 }
                 return true;
@@ -145,11 +145,9 @@ app.post('/register', ifLoggedin, [
     const { user_name, user_pass, user_email } = req.body;
     if (validation_result.isEmpty()) {
         bcrypt.hash(user_pass, 12).then((hash_pass) => {
-            dbConnection.query("INSERT INTO users(name, email, password) VALUES($1, $2, $3)", [user_name, user_email, hash_pass])
+            dbConnection.query("INSERT INTO users(name, email, password) VALUES(?, ?, ?)", [user_name, user_email, hash_pass])
                 .then(() => {
-                    
                     res.redirect('/login?register=success');
-                    
                 })
                 .catch((err) => {
                     if (err) throw err;
@@ -168,6 +166,7 @@ app.post('/register', ifLoggedin, [
         });
     }
 });
+
 app.post('/addboard', async (req, res) => {
     try {
         const { boardname, message, tokenboard, user_email } = req.body;
