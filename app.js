@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const mysql = require('mysql');
 const app = express();
-const port = 19696;
+const port = 2727;
 
 app.set('view engine', 'ejs');
 
