@@ -1,19 +1,15 @@
 const express = require('express');
 const path = require('path');
 const cookieSession = require('cookie-session');
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs');
 const mysql = require('mysql');
 const { body, validationResult } = require('express-validator');
-const dbConnection = require('./database');
+const dbPool = require('./database'); // Importing database pool
 const app = express();
+
 app.use(express.urlencoded({ extended: false }));
-const dbPool = mysql.createPool({
-    connectionLimit: 10, // จำกัดจำนวน connection ที่สามารถใช้พร้อมกันได้
-    host: "node60691-env-7996996.th1.proen.cloud",
-    user: "root",
-    password: "VDAygb99771",
-    database: "iotweb"
-});
+
+
 // SET OUR VIEWS AND VIEW ENGINE
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -32,6 +28,7 @@ const ifNotLoggedin = (req, res, next) => {
     }
     next();
 };
+
 const ifLoggedin = (req, res, next) => {
     if (req.session.isLoggedIn) {
         return res.redirect('/user');
@@ -59,7 +56,6 @@ app.get('/register', ifLoggedin, (req, res) => {
         old_data: {},
     });
 });
-
 
 // LOGIN PAGE
 app.get('/login', ifLoggedin, (req, res) => {
@@ -90,7 +86,7 @@ app.post('/login', ifLoggedin, [
     const validation_result = validationResult(req);
     const { user_pass, user_email } = req.body;
     if (validation_result.isEmpty()) {
-        dbConnection.query("SELECT * FROM users WHERE email=$1", [user_email])
+        dbPool.query("SELECT * FROM users WHERE email=$1", [user_email])
             .then((result) => {
                 bcrypt.compare(user_pass, result.rows[0].password).then((compare_result) => {
                     if (compare_result === true) {
@@ -131,7 +127,7 @@ app.get('/register', ifLoggedin, (req, res) => {
 app.post('/register', ifLoggedin, [
     body('user_email', 'Invalid email address!').isEmail().custom((value) => {
         return dbPool.query('SELECT email FROM users WHERE email = ?', [value])
-            .then(([rows]) => { // ใช้ [rows] แทน result เพื่อให้เหมาะสมกับการใช้งาน Connection Pool
+            .then(([rows]) => { // Use [rows] instead of result for compatibility with Connection Pool
                 if (rows.length > 0) {
                     return Promise.reject('This E-mail already in use!');
                 }
