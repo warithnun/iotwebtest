@@ -1,12 +1,13 @@
 const express = require('express');
 const path = require('path');
-const mysql = require('mysql');
-const app = express();
-const port = 3030;
-app.use(express.urlencoded({ extended: false }));
-app.set('view engine', 'ejs');
+const cookieSession = require('cookie-session');
+const bcrypt = require('bcrypt');
+const { body, validationResult } = require('express-validator');
 const dbConnection = require('./database');
+const app = express();
+app.use(express.urlencoded({ extended: false }));
 
+// SET OUR VIEWS AND VIEW ENGINE
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
@@ -268,6 +269,7 @@ app.get('/DatasensorStream', async (req, res) => {
 });
 
 
+
 app.post('/update-data', (req, res) => {
     const { temperature, humidity, soilMoisture, pHValue, token } = req.body;
 
@@ -289,4 +291,4 @@ app.use((req, res) => {
     res.redirect('/login');
    /*  res.status(404).send('<h1>404 Page Not Found!</h1>'); */
 });
-  app.listen(port, () => console.log(`Server is running on port ${port}`));
+  app.listen(3030, () => console.log(`Server is running on port ${3030}`));
