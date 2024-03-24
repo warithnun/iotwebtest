@@ -3,7 +3,7 @@ const path = require('path');
 const { Pool } = require('pg');
 
 const app = express();
-const port = 3030;
+const port = 11991;
 app.use(express.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
 
@@ -16,8 +16,16 @@ const pool = new Pool({
 });
 
 app.get('/', function(req, res) {
-    res.render('index');
-
+    const sql = "SELECT * FROM users";
+    pool.query(sql, function(err, result) {
+      if (err) {
+        console.error('An error occurred.', err);
+        res.status(500).send('An error occurred.');
+        return;
+      }
+      console.log(result.rows);
+      res.render('index',{ data: result.rows });
+    });
 });
 
 app.listen(port, () => {
