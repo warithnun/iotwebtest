@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const mysql = require('mysql');
 const app = express();
-const port = 2727;
+const port = 15392;
 
 app.set('view engine', 'ejs');
 
@@ -18,7 +18,9 @@ var con = mysql.createConnection({
     const sql = "SELECT * FROM users";
     con.query(sql, function(err, result) {
       if (err) throw err;
+      console.log(result)
       res.render('pages/index', { data: result });
     });
   });
+
   app.listen(port, () => console.log(`Server is running on port ${port}`));
