@@ -6,7 +6,13 @@ const { body, validationResult } = require('express-validator');
 const dbConnection = require('./database');
 const app = express();
 app.use(express.urlencoded({ extended: false }));
-
+const dbPool = mysql.createPool({
+    connectionLimit: 10, // จำกัดจำนวน connection ที่สามารถใช้พร้อมกันได้
+    host: "node60691-env-7996996.th1.proen.cloud",
+    user: "root",
+    password: "VDAygb99771",
+    database: "iotweb"
+});
 // SET OUR VIEWS AND VIEW ENGINE
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -35,12 +41,12 @@ const ifLoggedin = (req, res, next) => {
 
 // ROOT PAGE
 app.get('/', ifNotLoggedin, (req, res, next) => {
-    dbConnection.query("SELECT name FROM users WHERE id=$1", [req.session.userID], (err, result) => {
+    dbPool.query("SELECT name FROM users WHERE id=?", [req.session.userID], (err, result) => {
         if (err) {
             return next(err);
         }
         res.render('user', {
-            name: result.rows[0].name,
+            name: result[0].name,
         });
     });
 });
@@ -56,34 +62,27 @@ app.get('/register', ifLoggedin, (req, res) => {
 
 // LOGIN PAGE
 app.get('/login', ifLoggedin, (req, res) => {
-   
-    if(req.query.register === 'success'){
-        const registerSuccess = req.query.register === 'success';
-        res.render('login', {
-            login_errors: [],
-            register_success: registerSuccess,
-    
-    
-        });
-    }else{
-        res.render('login', {
-            login_errors: [],
-    
-        });
-    }
-        
-       
+    const registerSuccess = req.query.register === 'success';
+    res.render('login', {
+        login_errors: [],
+        register_success: registerSuccess,
+    });
 });
 
 app.post('/login', ifLoggedin, [
     body('user_email').custom((value) => {
-        return dbConnection.query('SELECT email FROM users WHERE email=$1', [value])
-            .then((result) => {
-                if (result.rows.length === 1) {
-                    return true;
+        return new Promise((resolve, reject) => {
+            dbPool.query('SELECT email FROM users WHERE email=?', [value], (error, results) => {
+                if (error) {
+                    reject(error);
                 }
-                return Promise.reject('Invalid Email Address!');
+                if (results.length === 1) {
+                    resolve(true);
+                } else {
+                    reject('Invalid Email Address!');
+                }
             });
+        });
     }),
     body('user_pass', 'Password is empty!').trim().not().isEmpty(),
 ], (req, res) => {
@@ -130,9 +129,9 @@ app.get('/register', ifLoggedin, (req, res) => {
 
 app.post('/register', ifLoggedin, [
     body('user_email', 'Invalid email address!').isEmail().custom((value) => {
-        return dbConnection.query('SELECT email FROM users WHERE email = ?', [value])
-            .then((result) => {
-                if (result.length > 0) {
+        return dbPool.query('SELECT email FROM users WHERE email = ?', [value])
+            .then(([rows]) => { // ใช้ [rows] แทน result เพื่อให้เหมาะสมกับการใช้งาน Connection Pool
+                if (rows.length > 0) {
                     return Promise.reject('This E-mail already in use!');
                 }
                 return true;
@@ -145,7 +144,7 @@ app.post('/register', ifLoggedin, [
     const { user_name, user_pass, user_email } = req.body;
     if (validation_result.isEmpty()) {
         bcrypt.hash(user_pass, 12).then((hash_pass) => {
-            dbConnection.query("INSERT INTO users(name, email, password) VALUES(?, ?, ?)", [user_name, user_email, hash_pass])
+            dbPool.query("INSERT INTO users(name, email, password) VALUES(?, ?, ?)", [user_name, user_email, hash_pass])
                 .then(() => {
                     res.redirect('/login?register=success');
                 })
@@ -188,15 +187,19 @@ app.post('/addboard', async (req, res) => {
 
 // USER PAGE
 app.get('/user', ifNotLoggedin, (req, res) => {
-    dbConnection.query("SELECT * FROM users WHERE id=$1", [req.session.userID], (err, result) => {
+    dbPool.query("SELECT * FROM users WHERE id = ?", [req.session.userID], (err, [result]) => {
         if (err) {
+            console.error('Error fetching user data:', err);
             return res.status(500).send('Internal Server Error');
         }
 
-        // นำข้อมูลชื่อผู้ใช้จากฐานข้อมูล
-        const username = result.rows[0].email || 'Guest';
-        // ส่งข้อมูลไปที่มุมมอง (view) เพื่อแสดงบนหน้าเว็บ
-        res.render('user', { username });
+        // ดำเนินการเฉพาะเมื่อมีผลลัพธ์ที่สำเร็จ
+        if (result.length > 0) {
+            const username = result[0].email || 'Guest';
+            res.render('user', { username });
+        } else {
+            res.status(404).send('User not found');
+        }
     });
 });
 
@@ -206,27 +209,29 @@ app.get('/getboards/:username', async (req, res) => {
         const username = req.params.username;
 
         // Query ข้อมูลจากฐานข้อมูลโดยใช้ username เป็นเงื่อนไข
-        const result = await dbConnection.query('SELECT * FROM board WHERE email = $1', [username]);
+        const result = await dbPool.query('SELECT * FROM board WHERE email = ?', [username]);
 
         // ส่งข้อมูลที่ได้กลับเป็น JSON ให้กับไคลเอ็นต์
-        res.json(result.rows);
+        res.json(result);
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching boards data:', err);
         // กรณีเกิดข้อผิดพลาด
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-app.get('/board',ifNotLoggedin, function(req, res) {
-    const nemeValue = req.query.neme;
-    res.render('board', { nemeValue: nemeValue });
+
+app.get('/board', ifNotLoggedin, (req, res) => {
+    const nemeValue = req.query.neme; // ตรวจสอบชื่อที่เข้าถึงผ่าน query parameters
+    res.render('board', { nemeValue: nemeValue }); // render หน้ามุมมอง 'board' พร้อมส่งค่า nemeValue ไปแสดงผล
 });
+
 
 app.get('/DatasensorStream', async (req, res) => {
     const neme = req.query.neme;
     try {
-        const query = `SELECT * FROM board WHERE token = '${neme}' ORDER BY id DESC LIMIT 1`;
-        const { rows } = await dbConnection.query(query);
+        const query = `SELECT * FROM board WHERE token = ? ORDER BY id DESC LIMIT 1`;
+        const { rows } = await dbPool.query(query, [neme]); // ใช้ Connection Pool และ parameterized query เพื่อป้องกันการทำ SQL Injection
 
         if (rows.length > 0) {
             res.writeHead(200, {
@@ -240,16 +245,15 @@ app.get('/DatasensorStream', async (req, res) => {
             };
 
             const watcher = () => {
-                const query = `SELECT * FROM board WHERE token = '${neme}' ORDER BY id DESC LIMIT 1`;
-                dbConnection.query(query)
-                    .then(result => {
-                        if (result.rows.length > 0) {
+                dbPool.query(query, [neme])
+                    .then(({ rows: result }) => {
+                        if (result.length > 0) {
                             const sensorData = {
-                                temperature: result.rows[0].temperature,
-                                humidity: result.rows[0].humidity,
-                                pHValue: result.rows[0].phvalue,
-                                soilMoisture: result.rows[0].soilmoisture,
-                                boardname: result.rows[0].boardname
+                                temperature: result[0].temperature,
+                                humidity: result[0].humidity,
+                                pHValue: result[0].phvalue,
+                                soilMoisture: result[0].soilmoisture,
+                                boardname: result[0].boardname
                             };
                             sendSensorData(sensorData);
                         }
@@ -269,14 +273,21 @@ app.get('/DatasensorStream', async (req, res) => {
 
 
 
+
 app.post('/update-data', (req, res) => {
     const { temperature, humidity, soilMoisture, pHValue, token } = req.body;
 
-    
-    dbConnection.query('UPDATE board SET temperature = $1, humidity = $2, soilmoisture = $3, phvalue = $4 WHERE token = $5', 
-        [temperature, humidity, soilMoisture, pHValue, token]);
-
+    const query = 'UPDATE board SET temperature = ?, humidity = ?, soilmoisture = ?, phvalue = ? WHERE token = ?';
+    dbPool.query(query, [temperature, humidity, soilMoisture, pHValue, token])
+        .then(() => {
+            res.status(200).send('Data updated successfully');
+        })
+        .catch(error => {
+            console.error('Error updating sensor data:', error);
+            res.status(500).send('Internal Server Error');
+        });
 });
+
 
 
 // LOGOUT
@@ -288,6 +299,5 @@ app.get('/logout', (req, res) => {
 // 404 Page Not Found
 app.use((req, res) => {
     res.redirect('/login');
-   /*  res.status(404).send('<h1>404 Page Not Found!</h1>'); */
 });
   app.listen(3030, () => console.log(`Server is running on port ${3030}`));
