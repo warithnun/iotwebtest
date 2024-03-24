@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+
+<body>
+  <div class="d-flex justify-content-center align-items-center vh-100 ">
+    <div class="col-sm-6 bg-light rounded border ">
+      <h2 class="text-center mt-3">Register</h2>
+
+      <form action="/register" method="POST" novalidate>
+        <div class="form-group">
+          <label for="_rname">Name</label>
+          <input type="text" name="user_name" id="_rname" class="form-control" placeholder="Name"
+            value="<%= (locals.old_data) ? old_data.user_name : ''; %>" required>
+        </div>
+        <div class="form-group">
+          <label for="_remail">Email</label>
+          <input type="email" name="user_email" id="_remail" class="form-control" placeholder="Email"
+            value="<%= (locals.old_data) ? old_data.user_email : ''; %>" required>
+        </div>
+        <div class="form-group">
+          <label for="_rpass">Password</label>
+          <input type="password" name="user_pass" id="_rpass" class="form-control" placeholder="Password" required>
+        </div>
+        <% if (locals.register_error) { register_error.forEach(function(error_msg){ %>
+          <div class="alert alert-danger" role="alert">
+            <%= error_msg %>
+          </div>
+          <% }); } %>
+
+          <div class="d-flex justify-content-between mb-3">
+            <div>
+            </div>
+            <button type="submit" class="btn btn-primary ml-5">ยืนยัน</button>
+            <a class="btn btn-danger" href="/login">ยกเลิก</a>
+          </div>
+
+            <!-- <button type="submit" class="btn btn-success ">Sign Up</button>
+            <div class="d-flex ms-auto "style="float:right">
+              <a class="btn" href="/login">Login</a>
+            </div> -->
+
+
+           
+
+          
+      </form>
+
+
+
+    </div>
+  </div>
+  <div class="col-sm-6 bg-light rounded border offset-sm-1">
+
+
+  </div>
+
+</body>
+
+</html>
