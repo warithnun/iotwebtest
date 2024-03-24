@@ -16,16 +16,8 @@ const pool = new Pool({
 });
 
 app.get('/', function(req, res) {
-    const sql = "SELECT * FROM users";
-    pool.query(sql, function(err, result) {
-      if (err) {
-        console.error('An error occurred.', err);
-        res.status(500).send('An error occurred.');
-        return;
-      }
-      console.log(result.rows);
-      res.render('index',{ data: result.rows });
-    });
+    res.render('index');
+
 });
 
 app.listen(port, () => {
