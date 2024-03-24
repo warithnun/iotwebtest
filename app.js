@@ -14,13 +14,14 @@ var con = mysql.createConnection({
     database: "test"
   });
 
-  app.get('/', function(req, res) {
+app.get('/', function(req, res) {
     const sql = "SELECT * FROM users";
     con.query(sql, function(err, result) {
       if (err) throw err;
       console.log(result)
       res.render('pages/index', { data: result });
     });
-  });
+});
+
 
   app.listen(port, () => console.log(`Server is running on port ${port}`));
