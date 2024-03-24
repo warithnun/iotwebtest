@@ -1,12 +1,10 @@
 {
-  "name": "iotwebtest",
+  "name": "help",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -19,7 +17,11 @@
   },
   "homepage": "https://github.com/Thanit1/iotwebtest#readme",
   "dependencies": {
+    "ejs": "^3.1.9",
     "express": "^4.19.1",
-    "mysql": "^2.18.1"
+    "mysql": "^2.18.1",
+    "node": "^21.7.1",
+    "nodemon": "^3.1.0",
+    "path": "^0.12.7"
   }
 }
