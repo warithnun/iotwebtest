@@ -19,7 +19,7 @@ app.get('/', function(req, res) {
     con.query(sql, function(err, result) {
       if (err) throw err;
       console.log(result)
-      res.render('/index',{ data: result });
+      res.render('index',{ data: result });
     });
 });
 
