@@ -1,13 +1,11 @@
-const mysql = require('mysql');
+const { Pool } = require('pg');
 
-// กำหนดค่าการเชื่อมต่อกับฐานข้อมูล
-const dbPool = mysql.createPool({
-    connectionLimit: 10,
-    host: "node60691-env-7996996.th1.proen.cloud",
-    user: "root",
-    password: "VDAygb99771",
-    database: "iotweb"
+const dbConnection = new Pool({
+    user: 'postgres',   // Correct PostgreSQL username
+    host: 'localhost',
+    database: 'web1',
+    password: '0000',
+    port: 5432
 });
 
-// สร้างโมดูลที่สามารถใช้ในแอปพลิเคชัน Express ได้
-module.exports = dbPool;
+module.exports = dbConnection;
