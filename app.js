@@ -3,7 +3,7 @@ const path = require('path');
 const { Pool } = require('pg');
 
 const app = express();
-const port = 3030;
+const port = 11991;
 app.use(express.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
 const dbConnection = require('./database');
