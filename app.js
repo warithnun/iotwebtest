@@ -3,7 +3,7 @@ const path = require('path');
 const { Pool } = require('pg');
 
 const app = express();
-const port = 3000;
+const port = 3030;
 app.use(express.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
 
