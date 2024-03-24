@@ -125,14 +125,19 @@ app.get('/register', ifLoggedin, (req, res) => {
 });
 
 app.post('/register', ifLoggedin, [
-    body('user_email', 'Invalid email address!').isEmail().custom((value) => {
-        return dbPool.query('SELECT email FROM users WHERE email = ?', [value])
-            .then(([rows]) => { // Use [rows] instead of result for compatibility with Connection Pool
-                if (rows.length > 0) {
-                    return Promise.reject('This E-mail already in use!');
+    body('user_email', 'Invalid email address!').isEmail().custom((value, { req }) => {
+        return new Promise((resolve, reject) => {
+            dbPool.query('SELECT email FROM users WHERE email = ?', [value], (error, [rows]) => {
+                if (error) {
+                    reject(error);
                 }
-                return true;
+                if (rows.length > 0) {
+                    reject('This E-mail already in use!');
+                } else {
+                    resolve(true);
+                }
             });
+        });
     }),
     body('user_name', 'Username is Empty!').trim().not().isEmpty(),
     body('user_pass', 'The password must be of minimum length 6 characters').trim().isLength({ min: 6 }),
@@ -141,17 +146,18 @@ app.post('/register', ifLoggedin, [
     const { user_name, user_pass, user_email } = req.body;
     if (validation_result.isEmpty()) {
         bcrypt.hash(user_pass, 12).then((hash_pass) => {
-            dbPool.query("INSERT INTO users(name, email, password) VALUES(?, ?, ?)", [user_name, user_email, hash_pass])
-                .then(() => {
-                    res.redirect('/login?register=success');
-                })
-                .catch((err) => {
-                    if (err) throw err;
-                });
-        })
-            .catch((err) => {
-                if (err) throw err;
+            dbPool.query("INSERT INTO users(name, email, password) VALUES(?, ?, ?)", [user_name, user_email, hash_pass], (error) => {
+                if (error) {
+                    console.error('Error inserting user:', error);
+                    return res.status(500).send('Internal Server Error');
+                }
+                res.redirect('/login?register=success');
             });
+        })
+        .catch((err) => {
+            console.error('Error hashing password:', err);
+            return res.status(500).send('Internal Server Error');
+        });
     } else {
         let allErrors = validation_result.errors.map((error) => {
             return error.msg;
@@ -162,6 +168,7 @@ app.post('/register', ifLoggedin, [
         });
     }
 });
+
 
 app.post('/addboard', async (req, res) => {
     try {
