@@ -14,7 +14,7 @@ var con = mysql.createConnection({
   });
 
   app.get('/', function(req, res) {
-    const sql = "SELECT * FROM userprofile";
+    const sql = "SELECT * FROM users";
     con.query(sql, function(err, result) {
       if (err) throw err;
       res.render('pages/index', { data: result });
