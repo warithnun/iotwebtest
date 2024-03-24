@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs')
+const mysql = require('mysql');
 const { body, validationResult } = require('express-validator');
 const dbConnection = require('./database');
 const app = express();
