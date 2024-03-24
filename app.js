@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const mysql = require('mysql');
 const app = express();
-const port = 15392;
+const port = 3030;
 
 app.set('view engine', 'ejs');
 
@@ -19,7 +19,7 @@ app.get('/', function(req, res) {
     con.query(sql, function(err, result) {
       if (err) throw err;
       console.log(result)
-      res.render('pages/index', { data: result });
+      res.render('pages/index',{ data: result });
     });
 });
 
