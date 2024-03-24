@@ -18,14 +18,23 @@
 </head>
 <body>
     <h1>User List</h1>
-    <div class="card mx-2 mt-2 mb-2" style="width: 12rem;">
-        <div class="card-body">
-            <a href="/board?neme=${board.token}" class="btn ">     <!-- แก้ไขตรงนี้ -->
-                <h5 class="card-title">${board.boardname}</h5>
-                <img src="OIP.jpg" style="width: 50px;" class="card-img-top" alt="">
-                <p class="card-text">${board.message}</p>
-            </a>
-        </div>
-    </div>`;
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% data.forEach(function(user) { %>
+                <tr>
+                    <td><%= user.id %></td>
+                    <td><%= user.name %></td>
+                    <td><%= user.email %></td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
 </body>
 </html>
