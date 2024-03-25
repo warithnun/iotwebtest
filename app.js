@@ -35,15 +35,19 @@ const ifLoggedin = (req, res, next) => {
 // END OF CUSTOM MIDDLEWARE
 
 // ROOT PAGE
-app.get('/', ifNotLoggedin, (req, res, next) => {
-    dbConnection.query("SELECT name FROM users WHERE id=$1", [req.session.userID], (err, result) => {
-        if (err) {
-            return next(err);
-        }
-        res.render('user', {
-            name: result.rows[0].name,
+app.get('/', (req, res, next) => {
+    if (!req.session.userID) { 
+        res.render('index'); 
+    } else {
+        dbConnection.query("SELECT name FROM users WHERE id=$1", [req.session.userID], (err, result) => {
+            if (err) {
+                return next(err);
+            }
+            res.render('user', {
+                name: result.rows[0].name,
+            });
         });
-    });
+    }
 });
 
 // REGISTER PAGE
