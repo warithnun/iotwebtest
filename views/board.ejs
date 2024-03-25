@@ -27,7 +27,8 @@
     </div>
 </nav>
   <div class="container ">
-    
+    <h4> </h4><h6 id="tokenname"></h6>
+    <button onclick="copyText()">คัดลอก</button>
     <!-- <center> -->
     <div class="text-center mt-5 mb-5">
       <!-- <h1 class="">Current Sensor Data:</h1> -->
@@ -73,7 +74,8 @@
     document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const nemeValue = urlParams.get('neme');
-
+    const tokenname = document.getElementById('tokenname');  
+    tokenname.textContent = `Token:${nemeValue} `;
     const temperatureDisplay = document.getElementById('temperatureDisplay');
     const humidityDisplay = document.getElementById('humidityDisplay');
     const pHValue = document.getElementById('pHValue');
@@ -98,7 +100,19 @@
     };
 });
 
-
+function copyText() {
+  var originalText = document.getElementById("tokenname").innerText;
+  var textToCopy = originalText.split(":")[1].trim();
+  var tempInput = document.createElement("input");
+  tempInput.value = textToCopy;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  tempInput.setSelectionRange(0, 99999); 
+  document.execCommand("copy");
+  document.body.removeChild(tempInput);
+  
+  alert("คัดลอกข้อความแล้ว: " + textToCopy);
+}
 
 
 

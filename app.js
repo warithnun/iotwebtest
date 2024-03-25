@@ -270,20 +270,63 @@ app.get('/DatasensorStream', ifNotLoggedin, async (req, res) => {
 });
 
 
-
 app.post('/update-data', (req, res) => {
-    const { temperature, humidity, soilMoisture, pHValue, token } = req.body;
+    const { username, password, temperature, humidity, soilMoisture, pHValue, token } = req.body;
 
-    
-    dbConnection.query('UPDATE board SET temperature = $1, humidity = $2, soilmoisture = $3, phvalue = $4 WHERE token = $5', 
-        [temperature, humidity, soilMoisture, pHValue, token]);
-
+    // ตรวจสอบข้อมูลที่ส่งมาและไม่ว่างเปล่า
+    if (!username || !password || !temperature || !humidity || !soilMoisture || !pHValue || !token) {
+        return res.status(400).send("Missing required fields.");
+    }
+    // ตรวจสอบ username และ password
+    dbConnection.query("SELECT * FROM users WHERE email=$1", [username])
+        .then((result) => {
+            if (result.rows.length > 0) {
+                bcrypt.compare(password, result.rows[0].password)
+                    .then((compare_result) => {
+                        if (compare_result === true) {
+                            // ตรวจสอบ user และ token
+                            dbConnection.query("SELECT * FROM board WHERE email=$1", [username])
+                                .then((boardResult) => {
+                                    let checktoken = false; // เพิ่มตัวแปรเพื่อตรวจสอบโทเค็น
+                                    for (let i = 0; i < boardResult.rows.length; i++) {
+                                        if (boardResult.rows[i].token === token) {
+                                            checktoken = true;
+                                            break;
+                                        }
+                                    }
+                                    if (checktoken === true) {
+                                        // อัพเดทข้อมูล
+                                        dbConnection.query('UPDATE board SET temperature = $1, humidity = $2, soilmoisture = $3, phvalue = $4 WHERE token = $5',
+                                            [temperature, humidity, soilMoisture, pHValue, token], (err, result) => {
+                                                if (err) {
+                                                    res.status(500).send("Internal Server Error");
+                                                } else {
+                                                    res.status(200).send("Data updated successfully");
+                                                    
+                                                }
+                                            });
+                                    } else {
+                                        res.status(403).send("Invalid token.");
+                                    }
+                                })
+                                .catch((err) => {
+                                    res.status(500).send("Internal Server Error");
+                                });
+                        } else {
+                            res.status(401).send("Incorrect password.");
+                        }
+                    })
+                    .catch((err) => {
+                        res.status(500).send("Internal Server Error");
+                    });
+            } else {
+                res.status(404).send("User not found.");
+            }
+        })
+        .catch((err) => {
+            res.status(500).send("Internal Server Error");
+        });
 });
-
-
-
-  
-
 
 // LOGOUT
 app.get('/logout', (req, res) => {
