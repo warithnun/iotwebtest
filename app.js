@@ -169,7 +169,7 @@ app.post('/register', ifLoggedin, [
         });
     }
 });
-app.post('/addboard', async (req, res) => {
+app.post('/addboard', ifNotLoggedin, async (req, res) => {
     try {
         const { boardname, message, tokenboard, user_email } = req.body;
         // เพิ่มข้อมูลลงในฐานข้อมูล
@@ -224,7 +224,7 @@ app.get('/board',ifNotLoggedin, function(req, res) {
     res.render('board', { nemeValue: nemeValue });
 });
 
-app.get('/DatasensorStream', async (req, res) => {
+app.get('/DatasensorStream', ifNotLoggedin, async (req, res) => {
     const neme = req.query.neme;
     try {
         const query = `SELECT * FROM board WHERE token = '${neme}' ORDER BY id DESC LIMIT 1`;
