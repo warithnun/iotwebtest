@@ -9,15 +9,11 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-light bg-light">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">IoT Project Logo</span>
-            <div class="me-2">
-                <h1>สวัสดีคุณ <%= username %></h1>
-            </div>
-            <a href="/logout" class="btn btn-danger">Logout</a>
-        </div>
-    </nav>
+      <!-- header -->
+      <div class="container-fluid sticky-top bg-light">
+        <%- include('navbar.ejs') %>
+    </div>
+  <!-- header -->
     <!-- เพิ่มบอร์ด -->
     <div class="mt-3">
         <form action="/addboard" method="POST" novalidate>
@@ -64,19 +60,45 @@
   
     
 
-    <script>
-        function generateToken() {
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            const tokenLength = 25;
-            let token = '';
-            for (let i = 0; i < tokenLength; i++) {
-                const randomIndex = Math.floor(Math.random() * characters.length);
-                token += characters.charAt(randomIndex);
-            }
-            document.getElementById('tokenboard').value = token;
-        }
+<script>
 
-        window.addEventListener('DOMContentLoaded', async () => {
+
+
+async function generateToken() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const tokenLength = 25;
+    let token = '';
+    let tokenExists = true;
+
+    while (tokenExists) {
+        token = generateUniqueToken(characters, tokenLength);
+        tokenExists = await isTokenExist(token);
+    }
+
+    document.getElementById('tokenboard').value = token;
+}
+
+function generateUniqueToken(characters, length) {
+    let token = '';
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        token += characters.charAt(randomIndex);
+    }
+    return token;
+}
+
+async function isTokenExist(token) {
+    try {
+        const dbConnection = require('./database');
+        const result = await dbConnection.query('SELECT COUNT(*) FROM board WHERE token = $1', [token]);
+        return parseInt(result.rows[0].count) > 0;
+    } catch (error) {
+        console.error('Error checking token existence:', error);
+        return false;
+    }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
     const username = '<%= username %>';
     const response = await fetch(`/getboards/${username}`);
     const boards = await response.json();

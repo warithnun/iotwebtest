@@ -35,20 +35,21 @@ const ifLoggedin = (req, res, next) => {
 // END OF CUSTOM MIDDLEWARE
 
 // ROOT PAGE
-app.get('/', (req, res, next) => {
+app.get('/', (req, res) => {
     if (!req.session.userID) { 
-        res.render('index'); 
+        res.render('index', { username: null }); 
     } else {
         dbConnection.query("SELECT name FROM users WHERE id=$1", [req.session.userID], (err, result) => {
             if (err) {
                 return next(err);
             }
-            res.render('user', {
-                name: result.rows[0].name,
+            res.render('index', {
+                username: result.rows[0].name, 
             });
         });
     }
 });
+
 
 // REGISTER PAGE
 app.get('/register', ifLoggedin, (req, res) => {
@@ -144,6 +145,12 @@ app.post('/register', ifLoggedin, [
             });
     }),
     body('user_name', 'Username is Empty!').trim().not().isEmpty(),
+    body('user_pass', 'Passwords do not match').custom((value, { req }) => {
+        if (value !== req.body.confirm_pass) {
+            throw new Error('Passwords do not match');
+        }
+        return true;
+    }),
     body('user_pass', 'The password must be of minimum length 6 characters').trim().isLength({ min: 6 }),
 ], (req, res, next) => {
     const validation_result = validationResult(req);
@@ -173,6 +180,7 @@ app.post('/register', ifLoggedin, [
         });
     }
 });
+
 app.post('/addboard', ifNotLoggedin, async (req, res) => {
     try {
         const { boardname, message, tokenboard, user_email } = req.body;
@@ -223,9 +231,15 @@ app.get('/getboards/:username', async (req, res) => {
     }
 });
 
-app.get('/board',ifNotLoggedin, function(req, res) {
-    const nemeValue = req.query.neme;
-    res.render('board', { nemeValue: nemeValue });
+app.get('/board', ifNotLoggedin, function(req, res, next) {
+    dbConnection.query("SELECT name FROM users WHERE id=$1", [req.session.userID], (err, result) => {
+        if (err) {
+            return next(err);
+        }
+        const username = result.rows[0].name;
+        const nemeValue = req.query.neme;
+        res.render('board', { username: username, nemeValue: nemeValue });
+    });
 });
 
 app.get('/DatasensorStream', ifNotLoggedin, async (req, res) => {
