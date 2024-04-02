@@ -29,6 +29,37 @@
   <div class="container ">
     <h4> </h4><h6 id="tokenname"></h6>
     <button onclick="copyText()">คัดลอก</button>
+<!-- เพิ่มปุ่มลบ -->
+    <button onclick="deleteData()" class="btn btn-danger">ลบฟาร์ม</button>
+    <!-- Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">ยืนยันการลบข้อมูล</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            คุณต้องการลบข้อมูลหรือไม่?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+            <!-- เมื่อคลิกที่ปุ่มยืนยัน จะเรียกฟังก์ชัน confirmDelete() -->
+            <button type="button" class="btn btn-primary" onclick="confirmDelete()">ยืนยัน</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- เพิ่มฟอร์มสำหรับลบข้อมูล -->
+    <form id="deleteForm" action="/deleteData" method="POST">
+      <!-- เพิ่ม input hidden เพื่อเก็บ token ที่ต้องการลบ -->
+      <input type="hidden" id="tokenInput" name="token" value="">
+    </form>
+
+
+
+
     <!-- <center> -->
     <div class="text-center mt-5 mb-5">
       <!-- <h1 class="">Current Sensor Data:</h1> -->
@@ -114,7 +145,22 @@ function copyText() {
   alert("คัดลอกข้อความแล้ว: " + textToCopy);
 }
 
+function deleteData() {
+    // เรียก Modal สำหรับยืนยันการลบข้อมูล
+    var myModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    myModal.show();
+  }
 
+  function confirmDelete() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenValue = urlParams.get('neme'); // หรือเปลี่ยนเป็น 'token' ตามที่เหมาะสม
+
+    // ตั้งค่าค่า token ลงใน input hidden
+    document.getElementById('tokenInput').value = tokenValue;
+
+    // submit ฟอร์มที่ใช้สำหรับลบข้อมูล
+    document.getElementById('deleteForm').submit();
+  }
 
 
   </script>

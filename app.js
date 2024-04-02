@@ -346,6 +346,34 @@ app.post('/update-data', (req, res) => {
         });
 });
 
+app.post('/deleteData', ifNotLoggedin, (req, res) => {
+    const { token } = req.body;
+
+    // ตรวจสอบว่า token ถูกต้องหรือไม่
+    dbConnection.query("SELECT * FROM board WHERE token=$1", [token])
+        .then((result) => {
+            if (result.rows.length > 0) {
+                // ถ้าพบ token ให้ลบข้อมูล
+                dbConnection.query("DELETE FROM board WHERE token=$1", [token])
+                    .then(() => {
+                        res.send("<script>alert('ลบข้อมูลแล้ว'); window.location.href = '/user';</script>");
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        res.status(500).send("เกิดข้อผิดพลาดในการลบข้อมูล");
+                    });
+            } else {
+                // ถ้าไม่พบ token ให้แสดงข้อความว่าไม่พบข้อมูล
+                res.status(404).send("ไม่พบข้อมูล");
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send("เกิดข้อผิดพลาดในการค้นหาข้อมูล");
+        });
+});
+
+
 // LOGOUT
 app.get('/logout', (req, res) => {
     req.session = null;
