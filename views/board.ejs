@@ -58,8 +58,6 @@
     </form>
 
 
-
-
     <!-- <center> -->
     <div class="text-center mt-5 mb-5">
       <!-- <h1 class="">Current Sensor Data:</h1> -->
@@ -154,14 +152,11 @@ function deleteData() {
   function confirmDelete() {
     const urlParams = new URLSearchParams(window.location.search);
     const tokenValue = urlParams.get('neme'); // หรือเปลี่ยนเป็น 'token' ตามที่เหมาะสม
-
     // ตั้งค่าค่า token ลงใน input hidden
     document.getElementById('tokenInput').value = tokenValue;
-
     // submit ฟอร์มที่ใช้สำหรับลบข้อมูล
     document.getElementById('deleteForm').submit();
   }
-
 
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>

@@ -36,20 +36,19 @@ const ifLoggedin = (req, res, next) => {
 
 // ROOT PAGE
 app.get('/', (req, res) => {
-    if (!req.session.userID) { 
-        res.render('index', { username: null }); 
+    if (!req.session.userID) {
+        res.render('index', { username: null });
     } else {
         dbConnection.query("SELECT name FROM users WHERE id=$1", [req.session.userID], (err, result) => {
             if (err) {
                 return next(err);
             }
             res.render('index', {
-                username: result.rows[0].name, 
+                username: result.rows[0].name,
             });
         });
     }
 });
-
 
 // REGISTER PAGE
 app.get('/register', ifLoggedin, (req, res) => {
@@ -62,23 +61,22 @@ app.get('/register', ifLoggedin, (req, res) => {
 
 // LOGIN PAGE
 app.get('/login', ifLoggedin, (req, res) => {
-   
-    if(req.query.register === 'success'){
+
+    if (req.query.register === 'success') {
         const registerSuccess = req.query.register === 'success';
         res.render('login', {
             login_errors: [],
             register_success: registerSuccess,
-    
-    
+
         });
-    }else{
+    } else {
         res.render('login', {
             login_errors: [],
-    
+
         });
     }
-        
-       
+
+
 });
 
 app.post('/login', ifLoggedin, [
@@ -159,9 +157,9 @@ app.post('/register', ifLoggedin, [
         bcrypt.hash(user_pass, 12).then((hash_pass) => {
             dbConnection.query("INSERT INTO users(name, email, password) VALUES($1, $2, $3)", [user_name, user_email, hash_pass])
                 .then(() => {
-                    
+
                     res.redirect('/login?register=success');
-                    
+
                 })
                 .catch((err) => {
                     if (err) throw err;
@@ -231,7 +229,7 @@ app.get('/getboards/:username', async (req, res) => {
     }
 });
 
-app.get('/board', ifNotLoggedin, function(req, res, next) {
+app.get('/board', ifNotLoggedin, function (req, res, next) {
     dbConnection.query("SELECT name FROM users WHERE id=$1", [req.session.userID], (err, result) => {
         if (err) {
             return next(err);
@@ -320,7 +318,7 @@ app.post('/update-data', (req, res) => {
                                                     res.status(500).send("Internal Server Error");
                                                 } else {
                                                     res.status(200).send("Data updated successfully");
-                                                    
+
                                                 }
                                             });
                                     } else {
@@ -383,9 +381,9 @@ app.get('/logout', (req, res) => {
 // 404 Page Not Found
 app.use((req, res) => {
     res.redirect('/login');
-   /*  res.status(404).send('<h1>404 Page Not Found!</h1>'); */
+    /*  res.status(404).send('<h1>404 Page Not Found!</h1>'); */
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+    console.log(`Server is running on port ${port}`);
 });
