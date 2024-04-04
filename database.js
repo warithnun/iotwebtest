@@ -1,9 +1,9 @@
 const { Pool } = require('pg');
 const dbConnection = new Pool({
-    user: 'webadmin',
-    host: 'node60694-iotweb.th1.proen.cloud',
-    database: 'test',
-    password: 'KRCqev36719',
+    user: 'postgres',
+    host: 'localhost',
+    database: 'web1',
+    password: '0000',
     port: 5432
 });
 

@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const dbConnection = require('./database');
 const app = express();
-const port = 5180;
+const port = 3300;
 app.use(express.urlencoded({ extended: false }));
 
 // SET OUR VIEWS AND VIEW ENGINE
