@@ -1,9 +1,12 @@
 <!-- navbar.ejs -->
-<header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom">
+<header>
+    class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom">
     <div class="col-md-3 mb-2 mb-md-0">
-        <a href="/" class="d-inline-flex link-body-emphasis text-decoration-none">
+        <!-- <a href="/" class="d-inline-flex link-body-emphasis text-decoration-none">
             <h3>FarmHug Logo</h3>
-        </a>
+        </a> -->
+        <a class="navber-brand" href="/"> <img src="https://img5.pic.in.th/file/secure-sv1/FH1.png" alt="width=" 50px"
+                height="50px"></a>
     </div>
 
     <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0 ms-auto">
@@ -13,14 +16,15 @@
         <li><a href="/ีuser" class="nav-link px-2">ฟาร์มของคุณ</a></li>
         <li><a href="#" class="nav-link px-2">เกี่ยวกับ</a></li>
     </ul>
-
+    
     <div class="col-md-3 text-end">
-        <% if (typeof username !== 'undefined' && username) { %>
+        <% if (typeof username !=='undefined' && username) { %>
             <a href="/logout" type="button" class="btn btn-danger">Logout</a>
-        <% } else { %>
-            <a href="/login" type="button" class="btn btn-outline-primary me-2">Login</a>
-            <a href="/register" type="button" class="btn btn-primary">Sign-up</a>
-        <% } %>
+            <% } else { %>
+                <a href="/login" type="button" class="btn btn-outline-primary me-2">Login</a>
+                <a href="/register" type="button" class="btn btn-primary">Sign-up</a>
+                <% } %>
     </div>
     
+
 </header>
